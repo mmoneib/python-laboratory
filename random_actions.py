@@ -10,6 +10,8 @@ import math
 
 #TODO Add possibility to use parameters for triggering a sequence of actions.
 #TODO Add an action to generate truth tables.
+#TODO Print comments in help.
+#TODO Internal validations specific for each action.
 
 def toss_coin():
   """
@@ -20,7 +22,7 @@ def toss_coin():
   """
   return randomly_choose(options=["H","T"])
 
-def left_or_right:
+def left_or_right():
   """
   Picks left or right direction randomly.
 
@@ -29,7 +31,7 @@ def left_or_right:
   """
   return randomly_choose(options=["L","R"])
 
-def up_or_down:
+def up_or_down():
   """
   Picks up or down movement randomly.
 
@@ -84,19 +86,32 @@ def turn_randomly():
   return randomly_choose(options=["F", "B", "L", "R"])
 
 def randomly_choose_with_bias(options=[], biases=[]):
+  """
+  Qualifies a list of random choices with another list of the same size hilding weights, one for each choice to influence the random selection with biased probabilites.
+
+  Args:
+    options (list): List of choices to be chosen from randomly.
+    biases (list): List of weights, each qualifying its corresponding choice in the "options" list.
+
+  Returns:
+    The member from the "options" list chosen randomly based on the specified weights.
+  """
   biasedOptions=[]
-  for divisor in range(2, max(biases)+1): # TODO: Move LCF of list.
-    tmpSum = 0
+  # Get HCF of the biases to optimize the generated biasedOptions..
+  for divisor in range(2, max(biases)+1):
+    hasRemainder = False
     for weight in biases:
-      tmpSum = tmpSum + (int(weight) % int(divisor))
-    if tmpSum == 0:
+      if int(weight) % int(divisor) != 0:
+        hasRemainder = True
+        break
+    if hasRemainder == False: # HCF found.
       break
     divisor = divisor + 1
-  if divisor > max(biases):
+  if divisor > max(biases): # HCF not found.
     divisor = 1
   biases[:] = [int(w/divisor) for w in biases] # The : inside [] is to change the same list. The division must be int.
   for i in range(0, len(biases)):
-    biasedOptions = biasedOptions + [options[i]] * biases[i]
+    biasedOptions = biasedOptions + [options[i]] * biases[i] # The squared brackets turn the int object into an iterable which can be repeated bu multiplication in a statement of list concatenation.
   return random.choice(biasedOptions)
 
 def randomly_choose(options=[]):
@@ -112,7 +127,7 @@ def randomly_choose(options=[]):
   """
   return random.choice(options)
 
-def random_sequence_of_actions(targetAction="", delimiter="\n", sequenceSize=1):
+def random_sequence_of_actions(targetAction=None, delimiter="\n", sequenceSize=1):
   """
   Calls another action a specified number of times to get a random sequence of outputs seperated by the specified delimiter.
 
@@ -126,17 +141,15 @@ def random_sequence_of_actions(targetAction="", delimiter="\n", sequenceSize=1):
   """
   result=""
   for i in range(0, sequenceSize):
-    result += eval(targetAction+"()")
+    result += str(eval(targetAction+"()"))
     if i < sequenceSize - 1:
       result += delimiter
   return result
 
-def histogram(targetAction="", sequenceSize=1):
-  print("Not implemented.")
-
-
 if __name__ == "__main__":
+  # Choices preparation.
   functionsList = [func for func in dir() if callable(eval(func)) and not func.startswith("__")]
+  # Arguments parsing.
   parser = argparse.ArgumentParser(description="Random generation set of actions.")
   parser.add_argument("--action", "-a", action="store", choices=functionsList, required=True)
   parser.add_argument("--biases", "-b", action="store")
@@ -144,8 +157,7 @@ if __name__ == "__main__":
   parser.add_argument("--sequence-size", "-s", action="store")
   parser.add_argument("--target-action", "-t", action="store", choices=functionsList)
   args = parser.parse_args()
-  if args.options and args.biases:
-    assert len(options) == len(biases)
+  # Prepare arguments for action call.
   callArgs=""
   if args.options:
     options=args.options.split(",")
@@ -158,5 +170,9 @@ if __name__ == "__main__":
     callArgs = callArgs + "sequenceSize={},".format(sequenceSize)
   if args.target_action:
     callArgs = callArgs + "targetAction=\"{}\",".format(args.target_action)
+  # General validations.
+  if args.options and args.biases:
+    assert len(options) == len(biases)
+  print("CallArgs={}".format(callArgs))
   print(eval(args.action+"({})".format(callArgs), globals(), locals()))
   
