@@ -1,7 +1,7 @@
 #!/usr/env/python
 #TODO Move core of obfuscation to list__actions and leave here only conversion with lists.
 
-def obfuscate_string(text, sequence):
+def obfuscate_by_sequence(text, sequence):
   originalText=text
   obfuscatedText=""
   while len(obfuscatedText) < len(originalText):
@@ -15,7 +15,7 @@ def obfuscate_string(text, sequence):
       text=text[0:index]+text[index+1:]
   print(obfuscatedText)
 
-def deobfuscate_string(text, sequence):
+def deobfuscate_by_sequence(text, sequence):
   obfuscatedText=text
   originalText=""
   originalTextList=[]
